@@ -163,17 +163,17 @@ for i = 1:NActvDOF	% loop through all active (enabled) DOFs
 end % i - all active (enabled) DOFs
 
 %% Find the number of, and indices for, control input triplets in the
-%   rotating frame:
-if (NInputs > 0)
-    [RotTripletIndicesCntrlInpt, NRotTripletCntrlInpt] = findBladeTriplets(data(1).u_rotFrame,DescCntrlInpt );
-end
-
-
-%% Find the number of, and indices for, output measurement triplets in the
-%   rotating frame:
-if (NumOuts > 0 )
-    [RotTripletIndicesOutput, NRotTripletOutput] = findBladeTriplets(data(1).y_rotFrame,DescOutput );
-end
+% %   rotating frame:
+% if (NInputs > 0)
+%     [RotTripletIndicesCntrlInpt, NRotTripletCntrlInpt] = findBladeTriplets(data(1).u_rotFrame,DescCntrlInpt );
+% end
+% 
+% 
+% %% Find the number of, and indices for, output measurement triplets in the
+% %   rotating frame:
+% if (NumOuts > 0 )
+%     [RotTripletIndicesOutput, NRotTripletOutput] = findBladeTriplets(data(1).y_rotFrame,DescOutput );
+% end
     
 % ----------- Clear some unneeded variables -------------------------------
 clear iFile i j k col Tmp;

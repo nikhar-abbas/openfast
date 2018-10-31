@@ -6,7 +6,7 @@ Outdir = '/Users/nabbas/Documents/TurbineModels/DTU_10MW';
 OutfileBase = 'DTU_10MW_RWT';
 nlin = 36;
 
-
+addpath(Outdir)
 
 %% Load Files
 clear linout
@@ -126,9 +126,19 @@ for ind = 1:nlin
     linout(ind).lambdas = lambdas;
     linout(ind).lamPBHres = lamrec;
     
+    % Change units on some specific states 
+    chstates = [5 19];                                  % 5, 19 = states in radians
+    blinpstates = [4:6,9];                                 % blade pitch
+    tauinpstates = [8];
+    A_MBC(chstates,:) = A_MBC(chstates,:).* 180/pi;     % change rad to deg
+    A_MBC(:,chstates) = A_MBC(:,chstates).* pi/180;     % change deg to rad
+    B_MBC(chstates,:) = B_MBC(chstates,:).* 180/pi;
+    B_MBC(:,blinpstates) = B_MBC(:,blinpstates).* pi/180;
+    B_MBC(:,tauinpstates) = B_MBC(:,tauinpstates).* 1000;
+    
     % Remove unnecessary states and inputs
      rmstates = [5];                                    % 5 = ED Variable speed generator DOF
-     rminputs = [1:7];                                  % 1-7 = All states besides GenTq and ColBldPitch
+     rminputs = [1:7,9];                                  % 1-7 = All states besides GenTq and ColBldPitch
      A_MBC(rmstates,:) = []; A_MBC(:,rmstates) = [];
      B_MBC(rmstates,:) = []; 
      B_MBC(:,rminputs) = [];
@@ -137,7 +147,10 @@ for ind = 1:nlin
      sys_rm = ss(A_MBC, B_MBC, C_MBC, D_MBC);
      linout(ind).x_desc_rm = linout(ind).x_desc;
      linout(ind).x_desc_rm(rmstates) = [];
-
+     linout(ind).u_desc_rm = linout(ind).u_desc;
+     linout(ind).u_desc_rm(rminputs) = [];
+     
+    
     % Save removed states
     linout(ind).A_MBC_rm = A_MBC;
     linout(ind).B_MBC_rm = B_MBC;
@@ -213,6 +226,7 @@ linavg.x_desc = linout(1).x_desc_rm;
 
 % Gramian
 linavg.Gc = gram(sys_avg,'c');
+ 
 % SVD
 [U,S,V] = svd(linavg.Gc);
 linavg.SVD.U = U;
@@ -227,60 +241,6 @@ linavg.SVD.V = V;
 %     linout(i).SVD.Xwork = [linout(i).SVD.Xwork xvec'/linout(i).Gc*xvec];
 % end
 
-%% Make some plots
-figure(1), hold on
-for ind = 1:nlin
-    plot(linout(ind).SVD.S)
-end
-title('Singular Values')
-
-% figure(2), hold on
-% for i = 1:nlin
-%     plot(linout(i).SVD.Xwork./max(linout(i).SVD.Xwork))
-% end
-% title('Work per state')
-
-% figure(3), hold on
-% for i = 1:nlin
-%     plot(linout(i).SVD.Xwork./max(linout(i).SVD.Xwork))
-% end
-% title('Work per state')
-
-% figure(4), hold on
-% for i = 1:4
-%     plot(abs(linout(i).SVD.V(i,:)))
-% end
-% title('Directions')
-
-figure(5),
-m = [];
-for ind = 1%:4
-    v = abs(linavg.SVD.V(ind,:))';
-    m = [m v];
-end
-cats = linavg.x_desc;
-% for i = 1:length(linout(1).x_desc_rm)
-%     cats(i) = {cats{i}(4:6)}
-% end
-c = categorical(cats);
-barh(c',m')
-% legend('1','2','3','4')
-
-% % First six singular values look interesting, lets think about their
-% % directions
-% figure, hold on
-% for i = 1:nlin
-%     for j = 1:6
-%         Vt = [linout(i).SVD.V]';
-%         vbar = Vt(i,:);
-%         ubar = linout(i).SVD.U(:,i);
-%         dir = vbar.*ubar';
-%         plot(dir,'x-','MarkerSize',10);
-%     end
-% end
-% legend('\sigma_1', '\sigma_2', '\sigma_3',  '\sigma_4',  '\sigma_5', '\sigma_6')
-% 
-% linout(1).x_desc_rm
 
 
 
