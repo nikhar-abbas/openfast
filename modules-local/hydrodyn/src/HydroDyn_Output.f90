@@ -17,10 +17,6 @@
 ! limitations under the License.
 !    
 !**********************************************************************************************************************************
-! File last committed: $Date$
-! (File) Revision #: $Rev$
-! URL: $HeadURL$
-!**********************************************************************************************************************************
 MODULE HydroDyn_Output
 
       ! This MODULE stores variables used for output.
@@ -721,10 +717,7 @@ SUBROUTINE HDOUT_Init( HydroDyn_ProgDesc, InitInp, y,  p, m, InitOut, ErrStat, E
          IF (ErrStat >= AbortErrLev ) RETURN
       END IF
       
-      IF ( p%OutSwtch == 1 ) THEN ! Only HD-level output writing
-         ! HACK  WE can tell FAST not to write any HD outputs by simply deallocating the WriteOutputHdr array!
-         DEALLOCATE ( InitOut%WriteOutputHdr )
-      END IF
+      
 
    RETURN
 
