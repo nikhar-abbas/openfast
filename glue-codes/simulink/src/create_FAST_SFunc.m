@@ -1,20 +1,39 @@
+% Before running this script, you must have compiled OpenFAST for Simulink to create a DLL (i.e., a shared library like .so, .dylib, .lib, etc.).
+% The name of the library that was generated must match the `libname` variable below, and should be located in the directory specified by `binDir`.
+
+mexname = 'FAST_SFunc';
 
 switch computer('arch')
     case 'win64'
-        mex -v -L../../bin -lFAST_Library_x64 ...
-            -I../../Source -I../../Source/dependencies/OpenFOAM -outdir ../../bin COMPFLAGS='$COMPFLAGS /MT' FAST_SFunc.c        
+        % this is set up for files generated using the x64 configuration of vs-build
+        libDir = '../../../build/bin';
+        includeDir = '/usr/local/include';
+        libName = 'OpenFAST-Simulink_Win32';
+        outDir = libDir;
+        
     case 'win32'
-        mex -L../../bin -lFAST_Library_Win32 ...
-            LINKFLAGS='$LINKFLAGS /LARGEADDRESSAWARE' ...
-            -I../../Source -I../../Source/dependencies/OpenFOAM -outdir ../../bin COMPFLAGS='$COMPFLAGS /MT' FAST_SFunc.c
+        % this is set up for files generated using the x86 configuration of vs-build
+        libDir = '../../../build/bin';
+        includeDir = '/usr/local/include';
+        libName = 'OpenFAST-Simulink_Win32';
+        outDir = libDir;
+        
     case 'maci64'
-        mex -L/usr/local/lib -lopenfastlib ...    
-            -I/usr/local/include -outdir . COMPFLAGS='$COMPFLAGS -MT' FAST_SFunc.c 
-            % This builds the mex file in the current directory, ./openfast/glue-codes/simulink/src/
+        libDir = '/usr/local/lib';
+        includeDir = '/usr/local/include';
+        libName = 'openfastlib';
+        outDir = '.';
+
     otherwise
         error('Unexpected computer architecture type.')
 end
 
-%%
- %addpath('C:\Users\bjonkman\Documents\CAETools\FASTv8\bin');
- %addpath('C:\Users\bjonkman\Documents\CAETools\FASTv8\Simulink\Samples');
+mex('-largeArrayDims', ...
+    ['-L' libDir], ...
+    ['-l' libName], ...
+    ['-I' includeDir], ...
+    '-outdir', outDir, ...
+    'COMPFLAGS=$COMPFLAGS -MT -D', ...
+    ['S_FUNCTION_NAME=' mexname], ...
+    '-output', mexname, ...
+    'FAST_SFunc.c');
