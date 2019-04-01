@@ -30,7 +30,8 @@ function [data] = ReadFASTLinear(fileName)
     data.n_z      = d{6}{1};
     data.n_u      = d{7}{1};
     data.n_y      = d{8}{1};
-            
+    data.n_xx     = 0;
+    
 
     line = fgetl(fid);
     C = textscan( line, '%s', 'delimiter', '?' );
@@ -45,7 +46,7 @@ function [data] = ReadFASTLinear(fileName)
     %% ...........................................
     % get operating points and row/column order
     if data.n_x > 0 
-        [data.x_op,    data.x_desc, data.x_rotFrame] = readLinTable(fid,data.n_x);
+        [data.x_op,    data.x_desc, data.x_rotFrame, data.n_xx] = readLinTable(fid,data.n_x);
         [data.xdot_op, data.xdot_desc]               = readLinTable(fid,data.n_x);
     end
 
@@ -83,28 +84,31 @@ function [data] = ReadFASTLinear(fileName)
 return
 end 
 
-function [op, desc, RF] = readLinTable(fid,n)
+function [op, desc, RF, n_xx] = readLinTable(fid,n)
 
     desc = cell(n,1);
     op   = cell(n,1);
     RF   = false(n,1);
+    n_xx = 0; %number of second derivatives
 
     fgetl(fid); % table title/comment
     fgetl(fid); % table header row 1
     fgetl(fid); % table header row 2
     
     for row=1:n
-        
         line = fgetl(fid);
-        [C,pos] = textscan( line, '%*f %f %s',1 );
-        if strcmp(line(pos),',') %we've got an orientation line:
+        [C,pos] = textscan( line, '%*f %f %s %s',1 );
+        if strcmp(C{2}(end),',') %we've got an orientation line (first string ends in comma instead of T/F):    
             [C,pos] = textscan( line, '%*f %f %*s %f %*s %f %s',1 );
             op{row} = [C{1:3}];
         else
             op{row} = C{1};
         end
-        RF(row) = strcmp(C{end},'T'); 
-        desc{row}=strtrim( line(pos+1:end) );        
+        RF(row) = strcmp(C{2},'T'); %updated to the second element with new column for derivative state order 
+        desc{row}=strtrim( line(pos+1:end) );
+        if strcmp(C{3}(end),'2') %Find number of second derivative states
+            n_xx = n_xx+1;
+        end
     end
 
     fgetl(fid); % skip a blank line
